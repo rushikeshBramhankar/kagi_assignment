@@ -9,9 +9,10 @@ class NewsDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(news['title'] ?? 'News Details'),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

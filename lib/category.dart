@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kagi_assignment/news_details.dart';
 
 class CategoryScreen extends StatefulWidget {
@@ -8,16 +9,35 @@ class CategoryScreen extends StatefulWidget {
   _CategoryScreenState createState() => _CategoryScreenState();
 }
 
-class _CategoryScreenState extends State<CategoryScreen> {
+class _CategoryScreenState extends State<CategoryScreen>
+    with SingleTickerProviderStateMixin {
   List<Map<String, String>> categories = [];
   String selectedCategory = 'World';
   List<dynamic> newsList = [];
+  late AnimationController _controller;
+  late Animation<Offset> _animation;
 
   @override
   void initState() {
     super.initState();
     fetchCategories();
     fetchNews('world.json');
+
+    _controller = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween<Offset>(
+      begin: Offset(0, 0),
+      end: Offset(0.2, -0.2),
+    ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> fetchCategories() async {
@@ -60,10 +80,27 @@ class _CategoryScreenState extends State<CategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Kite News'),
+        elevation: 0,
+        title: Row(
+          children: [
+            SlideTransition(
+              position: _animation,
+              child: Container(
+                height: 40,
+                width: 50,
+                child: SvgPicture.network(
+                    'https://kite.kagi.com/static/svg/kite.svg'),
+              ),
+            ),
+            SizedBox(width: 10),
+            Text('Kite News', style: TextStyle(color: Colors.black)),
+          ],
+        ),
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: Column(
         children: [
@@ -82,12 +119,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   },
                   child: Container(
                     margin:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
                     decoration: BoxDecoration(
-                      color:
-                          isSelected ? Colors.orange[300] : Colors.green[100],
+                      color: isSelected ? Colors.black : Colors.grey[100],
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.black54),
                     ),
@@ -105,7 +141,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
             ),
           ),
 
-          Divider(color: Colors.grey),
+          Divider(
+            color: Colors.grey[200],
+            indent: 8,
+            endIndent: 8,
+          ),
 
           // News List Section
           Expanded(
@@ -116,6 +156,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                     itemBuilder: (context, index) {
                       var news = newsList[index];
                       return Card(
+                        color: Colors.white,
                         margin: EdgeInsets.all(10),
                         child: ListTile(
                           title: Text(news['title'],
