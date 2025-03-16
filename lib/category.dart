@@ -96,7 +96,14 @@ class _CategoryScreenState extends State<CategoryScreen>
               ),
             ),
             SizedBox(width: 10),
-            Text('Kite News', style: TextStyle(color: Colors.black)),
+            Text(
+              'Kite News',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.2,
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.white,
@@ -107,37 +114,40 @@ class _CategoryScreenState extends State<CategoryScreen>
           // Category Section
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              children: categories.map((category) {
-                final isSelected = selectedCategory == category['name'];
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedCategory = category['name']!;
-                    });
-                    fetchNews(category['file']!);
-                  },
-                  child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.black : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.black54),
-                    ),
-                    child: Text(
-                      category['name'] ?? '',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(5.0, 0, 5, 0),
+              child: Row(
+                children: categories.map((category) {
+                  final isSelected = selectedCategory == category['name'];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedCategory = category['name']!;
+                      });
+                      fetchNews(category['file']!);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 15),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.black : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.black54),
+                      ),
+                      child: Text(
+                        category['name'] ?? '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
 
@@ -155,15 +165,23 @@ class _CategoryScreenState extends State<CategoryScreen>
                     itemCount: newsList.length,
                     itemBuilder: (context, index) {
                       var news = newsList[index];
-                      return Card(
-                        color: Colors.white,
-                        margin: EdgeInsets.all(10),
-                        child: ListTile(
-                          title: Text(news['title'],
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                              news['short_summary'] ?? "No summary available"),
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 8,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
                           onTap: () {
                             Navigator.push(
                               context,
@@ -173,11 +191,51 @@ class _CategoryScreenState extends State<CategoryScreen>
                               ),
                             );
                           },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // News Title
+                                    Text(
+                                      news['title'],
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+
+                                    SizedBox(height: 8),
+
+                                    // Short Summary
+                                    Text(
+                                      news['short_summary'] ??
+                                          "No summary available",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[700],
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+
+                                    SizedBox(height: 12),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
                   ),
-          ),
+          )
         ],
       ),
     );
