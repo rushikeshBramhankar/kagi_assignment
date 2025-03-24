@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kagi_assignment/news_details.dart';
+import 'package:kagi_assignment/onthisday.dart';
 
 class CategoryScreen extends StatefulWidget {
   @override
@@ -56,6 +57,7 @@ class _CategoryScreenState extends State<CategoryScreen>
               },
             ),
           );
+          print('Loaded categories: $categories');
         });
       }
     } else {
@@ -65,16 +67,39 @@ class _CategoryScreenState extends State<CategoryScreen>
   }
 
   Future<void> fetchNews(String file) async {
+    setState(() {
+      newsList = [];
+    });
+
     final response = await http.get(Uri.parse('https://kite.kagi.com/$file'));
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
+
       setState(() {
-        newsList = data['clusters'] ?? [];
+        if (file == 'onthisday.json') {
+          newsList = data['events'] ?? [];
+          print("Loaded ${newsList.length} On This Day events");
+        } else {
+          newsList = data['clusters'] ?? [];
+          print("Loaded ${newsList.length} news clusters");
+        }
       });
     } else {
       print("Error: Failed to fetch news, Status Code: ${response.statusCode}");
     }
+  }
+
+  String _stripHtml(String htmlString) {
+    return htmlString
+        .replaceAll(RegExp(r'<[^>]*>'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"');
   }
 
   @override
@@ -111,7 +136,6 @@ class _CategoryScreenState extends State<CategoryScreen>
       ),
       body: Column(
         children: [
-          // Category Section
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Padding(
@@ -121,6 +145,7 @@ class _CategoryScreenState extends State<CategoryScreen>
                   final isSelected = selectedCategory == category['name'];
                   return GestureDetector(
                     onTap: () {
+                      print('Selected category: ${category['name']}');
                       setState(() {
                         selectedCategory = category['name']!;
                       });
@@ -150,14 +175,11 @@ class _CategoryScreenState extends State<CategoryScreen>
               ),
             ),
           ),
-
           Divider(
             color: Colors.grey[200],
             indent: 8,
             endIndent: 8,
           ),
-
-          // News List Section
           Expanded(
             child: newsList.isEmpty
                 ? Center(child: CircularProgressIndicator())
@@ -165,6 +187,19 @@ class _CategoryScreenState extends State<CategoryScreen>
                     itemCount: newsList.length,
                     itemBuilder: (context, index) {
                       var news = newsList[index];
+                      bool isOnThisDay =
+                          selectedCategory.replaceAll(' ', '').toLowerCase() ==
+                              'onthisday';
+                      print('Building item $index - isOnThisDay: $isOnThisDay');
+                      print('News data: $news');
+
+                      String title = isOnThisDay
+                          ? 'On This Day in ${news['year'] ?? "History"}'
+                          : news['title'] ?? "No Title";
+
+                      String summary = isOnThisDay
+                          ? _stripHtml(news['content'] ?? 'Historical event')
+                          : news['short_summary'] ?? "No summary available";
 
                       return Container(
                         margin: const EdgeInsets.symmetric(
@@ -183,59 +218,57 @@ class _CategoryScreenState extends State<CategoryScreen>
                         ),
                         child: InkWell(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    NewsDetailScreen(news: news),
-                              ),
-                            );
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // News Title
-                                    Text(
-                                      news['title'],
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-
-                                    SizedBox(height: 8),
-
-                                    // Short Summary
-                                    Text(
-                                      news['short_summary'] ??
-                                          "No summary available",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[700],
-                                      ),
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-
-                                    SizedBox(height: 12),
-                                  ],
+                            if (isOnThisDay) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      OnThisDayScreen(event: news),
                                 ),
-                              ),
-                            ],
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      NewsDetailScreen(news: news),
+                                ),
+                              );
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  summary,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[700],
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
                     },
                   ),
-          )
+          ),
         ],
       ),
     );

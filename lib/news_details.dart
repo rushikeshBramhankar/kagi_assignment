@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/widgets.dart';
@@ -49,16 +50,85 @@ class NewsDetailScreen extends StatelessWidget {
   Widget _buildTimeline(String title, dynamic content) {
     if (content == null || (content is List && content.isEmpty))
       return Container();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
-        _buildText(title, 18, FontWeight.bold),
+        _buildText(title, 20, FontWeight.bold), // Larger Title Font
+        const SizedBox(height: 10),
         if (content is List)
-          ...content.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text('• $item'),
-              ))
+          Column(
+            children: List.generate(content.length, (index) {
+              List<String> parts = content[index].split(":: ");
+              String date = parts.length > 1 ? parts[0] : "";
+              String event = parts.length > 1 ? parts[1] : parts[0];
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Numbered Circle with Space
+                  Column(
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "${index + 1}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (index != content.length - 1)
+                        Container(
+                          margin: const EdgeInsets.only(
+                              top: 5), // Space between number and line
+                          width: 3, // Vertical Line Thickness
+                          height: 40, // Line Length
+                          color: Colors.blue, // Blue Vertical Line
+                        ),
+                    ],
+                  ),
+                  const SizedBox(
+                      width: 16), // More space between number and content
+                  // Timeline Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (date.isNotEmpty)
+                          Text(
+                            date,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                              fontSize: 18, // Increased Font Size
+                            ),
+                          ),
+                        const SizedBox(
+                            height: 4), // Space between date and event
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 4, 0, 10),
+                          child: Text(
+                            event,
+                            // Justified Event Text
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }),
+          )
         else
           Text(content),
       ],
@@ -68,16 +138,77 @@ class NewsDetailScreen extends StatelessWidget {
   Widget _buildTalking(String title, dynamic content) {
     if (content == null || (content is List && content.isEmpty))
       return Container();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
-        _buildText(title, 18, FontWeight.bold),
+        _buildText(title, 20, FontWeight.bold), // Increased Title Font Size
+        const SizedBox(height: 15),
         if (content is List)
-          ...content.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text('• $item'),
-              ))
+          Column(
+            children: List.generate(content.length, (index) {
+              List<String> parts = content[index].split(": ");
+              String heading = parts.length > 1 ? parts[0] : "";
+              String description = parts.length > 1 ? parts[1] : parts[0];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Circular Number Container
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 240, 175, 77),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "${index + 1}",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (heading.isNotEmpty)
+                              Text(
+                                heading,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18, // Increased Font Size
+                                ),
+                              ),
+                            Text(description),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  if (index != content.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        indent: 10,
+                        endIndent: 10,
+                      ),
+                    ),
+                ],
+              );
+            }),
+          )
         else
           Text(content),
       ],
@@ -153,14 +284,50 @@ class NewsDetailScreen extends StatelessWidget {
       children: [
         const SizedBox(height: 20),
         _buildText('Perspectives', 18, FontWeight.bold),
-        ...perspectives.map((perspective) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildText(perspective['text'], 16, FontWeight.normal),
-                ...?perspective['sources']?.map<Widget>(
-                    (source) => _buildLink(source['name'], source['url'])),
-              ],
-            ))
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 15, 15, 5),
+            child: Row(
+              children: perspectives.map((perspective) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.all(12),
+                  width: 250,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildText(
+                        perspective['text'],
+                        16,
+                        FontWeight.normal,
+                      ),
+                      const SizedBox(height: 8),
+                      if (perspective['sources'] != null)
+                        ...perspective['sources'].map<Widget>((source) {
+                          return _buildLink(source['name'], source['url']);
+                        }).toList(),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -178,7 +345,7 @@ class NewsDetailScreen extends StatelessWidget {
       return Column(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(15),
             child: Image.network(imageUrl, fit: BoxFit.cover),
           ),
           if (caption != null)
@@ -206,11 +373,16 @@ class NewsDetailScreen extends StatelessWidget {
         children: [
           const Icon(
             Icons.location_on_outlined,
+            color: Colors.black,
           ),
           const SizedBox(width: 5),
-          Text(location,
-              style:
-                  const TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
+          Text(
+            location,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
         ],
       ),
     );
@@ -256,12 +428,12 @@ class NewsDetailScreen extends StatelessWidget {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Text(
           text,
           style: const TextStyle(
             color: Colors.blue,
-            decoration: TextDecoration.underline,
+            fontStyle: FontStyle.italic,
           ),
         ),
       ),
